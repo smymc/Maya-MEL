@@ -1,6 +1,7 @@
 /**
  *  @file kmEnvCheck.mel
  *  @brief check for env path
+ *  @date	2015/02/07
  */
 global proc kmEnvCheck() {
 	
@@ -39,6 +40,7 @@ global proc kmEnvCheck() {
 		gridLayout -numberOfColumns 3 -cellWidthHeight ($iWinW/3) 20;
 			button -label "MAYA_SCRIPT_PATH"		-command "kmGetPATH(\"MAYA_SCRIPT_PATH\")";
 			button -label "PYTHONPATH"				-command "kmGetPATH(\"PYTHONPATH\")";
+			button -label "PYTHONPATH(sys.path)"	-command "kmGetSysPath()";
 			button -label "XBMLANGPATH"				-command "kmGetPATH(\"XBMLANGPATH\")";
 			button -label "MAYA_PLUG_IN_PATH"	-command "kmGetPATH(\"MAYA_PLUG_IN_PATH\")";
 			button -label "MAYA_SHELF_PATH"		-command "kmGetPATH(\"MAYA_SHELF_PATH\")";
@@ -62,3 +64,14 @@ global proc kmGetPATH( string $strEnv ) {
 	scrollField -edit -text $strText sF_env;
 }
 
+global proc kmGetSysPath() {
+	string $strlPath[];
+	string $strPath;
+	
+	python("import sys");
+	$strlPath = python("sys.path");
+
+	string $strText = stringArrayToString( $strlPath ,"\n");
+
+	scrollField -edit -text $strText sF_env;
+}
