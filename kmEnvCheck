@@ -1,8 +1,12 @@
+////////////////////////////////////////////////////////////////////////////////
 /**
  *  @file kmEnvCheck.mel
  *  @brief check for env path
- *  @date	2015/02/07
+ *  @date	2015/02/28
+ *  @version 1.2.0
+ *  @note	add path check
  */
+ ////////////////////////////////////////////////////////////////////////////////
 global proc kmEnvCheck() {
 	
 	if(`window -ex kmEnvCheckUI`) {
@@ -12,16 +16,16 @@ global proc kmEnvCheck() {
 	int $iWinW = 700;
 	int $iWinH = 200;
 	
-	string $windowName = `window
-				-title "Check Env Path"
-				-width $iWinW
-				-height $iWinH
-				-minimizeButton 1
-				-maximizeButton 0
-				// -menuBar true
-				-sizeable true
-			kmEnvCheckUI`;
-	
+	string $windowName = `
+		window
+			-title "Check Env Path"
+			-width $iWinW
+			-height $iWinH
+			-minimizeButton 1
+			-maximizeButton 0
+			// -menuBar true
+			-sizeable true
+		kmEnvCheckUI`;
 	
 	paneLayout
 		-configuration "horizontal2" 
@@ -32,38 +36,46 @@ global proc kmEnvCheck() {
 		scrollField
 			-wordWrap true
 			-text  ""
-			// -width 500
-			// -height 100
 			-editable true
 		sF_env;
 		
-		gridLayout -numberOfColumns 3 -cellWidthHeight ($iWinW/3) 20;
-			button -label "MAYA_SCRIPT_PATH"		-command "kmGetPATH(\"MAYA_SCRIPT_PATH\")";
-			button -label "PYTHONPATH"				-command "kmGetPATH(\"PYTHONPATH\")";
-			button -label "PYTHONPATH(sys.path)"	-command "kmGetSysPath()";
-			button -label "XBMLANGPATH"				-command "kmGetPATH(\"XBMLANGPATH\")";
-			button -label "MAYA_PLUG_IN_PATH"	-command "kmGetPATH(\"MAYA_PLUG_IN_PATH\")";
-			button -label "MAYA_SHELF_PATH"		-command "kmGetPATH(\"MAYA_SHELF_PATH\")";
-			button -label "MAYA_MODULE_PATH"	-command "kmGetPATH(\"MAYA_MODULE_PATH\")";
-			button -label "MAYA_PRESET_PATH"		-command "kmGetPATH(\"MAYA_PRESET_PATH\")";
-			button -label "TEMP"							-command "kmGetPATH(\"TEMP\")";
-			button -label "TMPDIR"						-command "kmGetPATH(\"TMPDIR\")";
+		columnLayout -adj true;
+			gridLayout -numberOfColumns 3 -cellWidthHeight ($iWinW/3) 20;
+				button -label "MAYA_SCRIPT_PATH"		-command "kmGetPATH(\"MAYA_SCRIPT_PATH\")";
+				button -label "PYTHONPATH"					-command "kmGetPATH(\"PYTHONPATH\")";
+				button -label "PYTHONPATH(sys.path)"	-command "kmGetSysPath()";
+				button -label "XBMLANGPATH"				-command "kmGetPATH(\"XBMLANGPATH\")";
+				button -label "MAYA_PLUG_IN_PATH"		-command "kmGetPATH(\"MAYA_PLUG_IN_PATH\")";
+				button -label "MAYA_SHELF_PATH"			-command "kmGetPATH(\"MAYA_SHELF_PATH\")";
+				button -label "MAYA_MODULE_PATH"		-command "kmGetPATH(\"MAYA_MODULE_PATH\")";
+				button -label "MAYA_PRESET_PATH"		-command "kmGetPATH(\"MAYA_PRESET_PATH\")";
+				button -label "TEMP"								-command "kmGetPATH(\"TEMP\")";
+				button -label "TMPDIR"							-command "kmGetPATH(\"TMPDIR\")";
+			setParent..;
+			
+			button -label "CHECK PATH"					-command "kmCheckPath()";
+			
 		setParent..;
 	setParent..;
 	
 	showWindow $windowName;
 }
-
+////////////////////////////////////////////////////////////////////////////////
 global proc kmGetPATH( string $strEnv ) {
 	string $strPath =`getenv $strEnv`;
+	
 	string $strlPath[] = stringToStringArray($strPath,";");
+	for( $i = 0; $i < size( $strlPath); $i++ ) {
+		$strlPath[$i] = substituteAllString( $strlPath[$i], "\\", "/");
+	}
+	// print $strlPath;
 	
 	string $strText = stringArrayToString( $strlPath ,"\n");
 	
 	
 	scrollField -edit -text $strText sF_env;
 }
-
+////////////////////////////////////////////////////////////////////////////////
 global proc kmGetSysPath() {
 	string $strlPath[];
 	string $strPath;
@@ -74,4 +86,24 @@ global proc kmGetSysPath() {
 	string $strText = stringArrayToString( $strlPath ,"\n");
 
 	scrollField -edit -text $strText sF_env;
+}
+////////////////////////////////////////////////////////////////////////////////
+global proc kmCheckPath( ) {
+	string $strlPath[] = stringToStringArray(`scrollField -q -text sF_env`, "\n");
+	string $strResult;
+	
+	python("import os.path");
+	for( $i = 0; $i < size($strlPath); $i++ ) {
+		python("path=" + "\"" + $strlPath[$i] + "\"");
+		if( python("os.path.isdir(path)") == true ) {
+			$strResult = "OK : ";
+		} else {
+			$strResult = "NG : ";
+		}
+		$strlPath[$i] = $strResult + $strlPath[$i];
+		print $strlPath[$i];
+		print "\n";
+	}
+	
+	scrollField -e -text (stringArrayToString($strlPath, "\n" )) sF_env;
 }
