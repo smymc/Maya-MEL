@@ -1,12 +1,19 @@
 ////////////////////////////////////////////////////////////////////////////////
 /**
- *  @file kmEnvCheck.mel
- *  @brief check for env path
- *  @date	2015/02/28
- *  @version 1.2.0
- *  @note	add path check
+ *  @file		kmEnvCheck.mel
+ *  @brief		check for env path
+ *  @date		2015/03/06
+ *  @version	1.3.0
+ *  @note		color
  */
  ////////////////////////////////////////////////////////////////////////////////
+ /**
+ *  @brief Brief
+ *  
+ *  @return Return_Description
+ *  
+ *  @details Details
+ */
 global proc kmEnvCheck() {
 	
 	if(`window -ex kmEnvCheckUI`) {
@@ -61,6 +68,14 @@ global proc kmEnvCheck() {
 	showWindow $windowName;
 }
 ////////////////////////////////////////////////////////////////////////////////
+/**
+ *  @brief Brief
+ *  
+ *  @param [in] $strEnv Parameter_Description
+ *  @return Return_Description
+ *  
+ *  @details Details
+ */
 global proc kmGetPATH( string $strEnv ) {
 	string $strPath =`getenv $strEnv`;
 	
@@ -76,6 +91,13 @@ global proc kmGetPATH( string $strEnv ) {
 	scrollField -edit -text $strText sF_env;
 }
 ////////////////////////////////////////////////////////////////////////////////
+/**
+ *  @brief Brief
+ *  
+ *  @return Return_Description
+ *  
+ *  @details Details
+ */
 global proc kmGetSysPath() {
 	string $strlPath[];
 	string $strPath;
@@ -88,22 +110,38 @@ global proc kmGetSysPath() {
 	scrollField -edit -text $strText sF_env;
 }
 ////////////////////////////////////////////////////////////////////////////////
+/**
+ *  @brief Brief
+ *  
+ *  @return Return_Description
+ *  
+ *  @details Details
+ */
 global proc kmCheckPath( ) {
 	string $strlPath[] = stringToStringArray(`scrollField -q -text sF_env`, "\n");
 	string $strResult;
+	string $strFntClr;
+	string $strTmp;
+	
+	scrollField -e -clear sF_env;
+	scrollField -e -text "" sF_env;
 	
 	python("import os.path");
 	for( $i = 0; $i < size($strlPath); $i++ ) {
 		python("path=" + "\"" + $strlPath[$i] + "\"");
 		if( python("os.path.isdir(path)") == true ) {
-			$strResult = "OK : ";
+			$strResult = "○ : ";
+			$strFntClr = "LimeGreen";
 		} else {
-			$strResult = "NG : ";
+			$strResult = "× : ";
+			$strFntClr = "red";
 		}
 		$strlPath[$i] = $strResult + $strlPath[$i];
-		print $strlPath[$i];
-		print "\n";
+		// print $strlPath[$i];
+		// print "\n";
+		$strTmp += "<font color=" + $strFntClr + ">" + $strlPath[$i] + "</font><br>";
+		$strTmp += "\n";
 	}
-	
-	scrollField -e -text (stringArrayToString($strlPath, "\n" )) sF_env;
+	// scrollField -e -text (stringArrayToString($strlPath, "\n" )) sF_env;
+	scrollField -e -text $strTmp sF_env;
 }
