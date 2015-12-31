@@ -1,0 +1,21 @@
+/*!
+	kmMoveUpHierarchy
+	@brief	‚Ü‚Æ‚ß‚ÄŠK‘w‚ğ‚Ğ‚Æ‚Âã‚É
+*/
+global proc kmMoveUpHierarchy( string $strlSelect[] ) {
+	string $strlPath[];
+	string $strlHrcy[];
+
+	for( $strTmp in $strlSelect ) {
+		$strlPath = `listRelatives -f $strTmp`;
+		tokenize $strlPath[0] "|" $strlHrcy;
+		
+
+		if( size($strlHrcy) < 4 ) {
+			//‘ÎÛ‚ªTopNode‚Ì
+			parent -w $strlHrcy[1];
+		} else {
+			parent $strlHrcy[size($strlHrcy)-2] $strlHrcy[size($strlHrcy)-4];
+		}
+	}
+}

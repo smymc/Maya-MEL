@@ -1,0 +1,15 @@
+/*!
+	kmCreateSameNameGP
+	@brief	Å‰‚É‘I‘ğ‚µ‚½–¼‘O_GP‚ÌGroupƒm[ƒh‚ğì‚Á‚ÄŠi”[‚·‚é
+*/
+global proc kmCreateSameNameGP() {
+	string $target[] =`ls -sl`;
+	string $strSfx = "_GP";
+	$grpName = ($target[0] + $strSfx);
+	if( endString( $target[0], size($strSfx) ) == $strSfx ) {
+		group -n $target[0];
+	} else {
+		group -n $grpName;
+	}
+	xform -os -piv 0 0 0;
+}

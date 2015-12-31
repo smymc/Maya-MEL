@@ -1,0 +1,155 @@
+////////////////////////////////////////////////////////////////////////////////
+/**
+ *  @file			kmEnvCheck.mel
+ *  @brief			check for env path
+ *  @date			2015/04/29
+ *  @version	1.3.1
+ *  @note			- bugfix
+ *  						- Change Color
+ */
+ ////////////////////////////////////////////////////////////////////////////////
+ /**
+ *  @brief Brief
+ *  
+ *  @return Return_Description
+ *  
+ *  @details Details
+ */
+global proc kmEnvCheck() {
+	
+	if(`window -ex kmEnvCheckUI`) {
+		deleteUI kmEnvCheckUI;
+	}
+	
+	int $iWinW = 700;
+	int $iWinH = 200;
+	
+	string $windowName = `
+		window
+			-title "Check Env Path"
+			-width $iWinW
+			-height $iWinH
+			-minimizeButton 1
+			-maximizeButton 0
+			// -menuBar true
+			-sizeable true
+		kmEnvCheckUI`;
+	
+	paneLayout
+		-configuration "horizontal2" 
+		-ps 1 100 80
+		-ps 2 100 20
+		-st 5 
+	pL_envPath;
+		scrollField
+			-wordWrap true
+			-text  ""
+			-editable true
+		sF_env;
+		
+		columnLayout -adj true;
+			gridLayout -numberOfColumns 3 -cellWidthHeight ($iWinW/3) 20;
+				button -label "MAYA_SCRIPT_PATH"		-command "kmGetPATH(\"MAYA_SCRIPT_PATH\")";
+				button -label "PYTHONPATH"					-command "kmGetPATH(\"PYTHONPATH\")";
+				button -label "PYTHONPATH(sys.path)"		-command "kmGetSysPath()";
+				button -label "XBMLANGPATH"					-command "kmGetPATH(\"XBMLANGPATH\")";
+				button -label "MAYA_PLUG_IN_PATH"		-command "kmGetPATH(\"MAYA_PLUG_IN_PATH\")";
+				button -label "MAYA_SHELF_PATH"			-command "kmGetPATH(\"MAYA_SHELF_PATH\")";
+				button -label "MAYA_MODULE_PATH"		-command "kmGetPATH(\"MAYA_MODULE_PATH\")";
+				button -label "MAYA_PRESET_PATH"		-command "kmGetPATH(\"MAYA_PRESET_PATH\")";
+				button -label "TEMP"								-command "kmGetPATH(\"TEMP\")";
+				button -label "TMPDIR"							-command "kmGetPATH(\"TMPDIR\")";
+			setParent..;
+			
+			button -label "CHECK PATH"						-command "kmCheckPath()";
+			
+		setParent..;
+	setParent..;
+	
+	showWindow $windowName;
+}
+////////////////////////////////////////////////////////////////////////////////
+/**
+ *  @brief Brief
+ *  
+ *  @param [in] $strEnv Parameter_Description
+ *  @return Return_Description
+ *  
+ *  @details Details
+ */
+global proc kmGetPATH( string $strEnv ) {
+	string $strPath =`getenv $strEnv`;
+	
+	scrollField -edit -clear sF_env;
+	
+	string $strlPath[] = stringToStringArray($strPath,";");
+	for( $i = 0; $i < size( $strlPath); $i++ ) {
+		$strlPath[$i] = substituteAllString( $strlPath[$i], "\\", "/");
+	}
+	// print $strlPath;
+	
+	string $strText = stringArrayToString( $strlPath ,"\n");
+	
+	scrollField -edit -text $strText sF_env;
+}
+////////////////////////////////////////////////////////////////////////////////
+/**
+ *  @brief Brief
+ *  
+ *  @return Return_Description
+ *  
+ *  @details Details
+ */
+global proc kmGetSysPath() {
+	string $strlPath[];
+	string $strPath;
+	
+	python("import sys");
+	$strlPath = python("sys.path");
+
+	string $strText = stringArrayToString( $strlPath ,"\n");
+
+	scrollField -edit -text $strText sF_env;
+}
+////////////////////////////////////////////////////////////////////////////////
+/**
+ *  @brief Brief
+ *  
+ *  @return Return_Description
+ *  
+ *  @details Details
+ */
+global proc kmCheckPath( ) {
+	string $strlPath[] = stringToStringArray(`scrollField -q -text sF_env`, "\n");
+	string $strResult;
+	string $strFntClr;
+	string $strTmp;
+	
+	scrollField -e -clear sF_env;
+	scrollField -e -text "" sF_env;
+	
+	python("import os.path");
+	for( $i = 0; $i < size($strlPath); $i++ ) {
+		//‚·‚Å‚É›~“ü‚Á‚Ä‚½ê‡‚Ííœ
+		if( startsWith($strlPath[$i], "› : " ) || startsWith($strlPath[$i], "~ : " ) ) {
+			$strlPath[$i] = substring($strlPath[$i], 5, size($strlPath[$i]) );
+		}
+		
+		python("path=" + "\"" + $strlPath[$i] + "\"");
+		
+		if( python("os.path.isdir(path)") == true ) {
+			$strResult = "› : ";
+			$strFntClr = "LimeGreen";
+		} else {
+			$strResult = "~ : ";
+			$strFntClr = "red";
+		}
+		$strlPath[$i] = $strResult + $strlPath[$i];
+		// print $strlPath[$i];
+		// print "\n";
+		$strTmp += "<font color=" + $strFntClr + ">" + $strlPath[$i] + "</font><br>";
+		$strTmp += "\n";
+	}
+	// scrollField -e -text (stringArrayToString($strlPath, "\n" )) sF_env;
+	scrollField -e -text $strTmp sF_env;
+}
